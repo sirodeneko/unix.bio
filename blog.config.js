@@ -1,7 +1,7 @@
 
 const BLOG = {
   anthor: 'me',
-  title: 'unix.bio',
+  title: 'siroblog',
   description: 'Witt\'s blog',
   summary: 'My new blog',
   language: 'en-us',
@@ -13,8 +13,8 @@ const BLOG = {
     list: '所有',
   },
   
-  email: '',
-  github: 'unix',
+  email: 'siro-neko@qq.com',
+  github: 'sirodeneko',
   twitter: '',
   domain: 'unix.bio',
   
