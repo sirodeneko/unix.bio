@@ -1,9 +1,9 @@
 
 const BLOG = {
-  anthor: 'Witt',
-  title: 'Witt - unix.bio',
+  anthor: 'me',
+  title: 'unix.bio',
   description: 'Witt\'s blog',
-  summary: 'JavaScript 工程师，对开发者体验感兴趣。',
+  summary: 'My new blog',
   language: 'en-us',
   latestLimit: 5,
   
@@ -13,12 +13,12 @@ const BLOG = {
     list: '所有',
   },
   
-  email: 'unix.bio@gmail.com',
+  email: '',
   github: 'unix',
-  twitter: 'echo_witt',
+  twitter: '',
   domain: 'unix.bio',
   
-  googleAnalytics: 'UA-110371817-3',
+  googleAnalytics: '',
   cn: true,
 }
 
