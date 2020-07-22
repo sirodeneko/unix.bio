@@ -1,4 +1,3 @@
-
 const BLOG = {
   author: 'Witt',
   title: 'Witt - unix.bio',

@@ -2,6 +2,8 @@
 
 > Modern static blog template.
 
+[中文文档](./README_CN.md)
+
 <br />
 
 ### How to use
@@ -10,17 +12,21 @@ This is the source code of my [blog](https://unix.bio).
 
 You can also use this project to build your own blog.
 
-Click <kbd>Use this template</kbd> button on GitHub.
+Run `npm init unix-bio` or `yarn create unix-bio` to initialize.
 
 <br />
 
 ### Write & Deploy
 
-1. In project, run `yarn post` to create your post.
+First, Please make sure your [NodeJS](https://nodejs.org/en/) is in the latest version.
 
-2. run `yarn dev` to browse development page.
+1. In project, run `npm i` to download dependents.
 
-3. run `now` to deploy. (Default deployment to [now](https://now.sh/))
+2. run `npm run post` to create your post.
+
+3. run `npm run dev` to browse development page.
+
+4. run `npm i -g vercel && vercel` to deploy. (Default deployment to [Vercel](http://vercel.com/))
 
 <br />
 
@@ -28,13 +34,13 @@ Click <kbd>Use this template</kbd> button on GitHub.
 
 #### High optimization
 
-  - High performance optimization thanks to [next.js](http://nextjs.com/)
-  - Perfect SEO support
-  - High readability
-  - Your just need to `write`
+- High performance optimization thanks to [next.js](http://nextjs.com/)
+- Perfect SEO support
+- High readability
+- Your just need to `write`
 
 <p align="center">
-<img width="600" align="center" src="https://user-images.githubusercontent.com/11304944/76160335-3dd1b980-6164-11ea-8e84-535353f5811b.png">
+<img width="500" align="center" src="https://user-images.githubusercontent.com/11304944/77065913-1bba2000-6a1d-11ea-868c-8e96dd09ddd5.png">
 </p>
 
 <br />
@@ -47,22 +53,23 @@ You can **switch languages** in the configuration file
 
 #### Write on MDXJS
 
-  - Full markdown support
-  - React Components support
-  - More customization possibilities
+- Full markdown support
+- React Components support
+- More customization possibilities
 
 <p align="center">
 <img width="600" src="https://user-images.githubusercontent.com/11304944/76159776-b33a8b80-615e-11ea-9752-19827e5c900d.png">
 </p>
-  
+
 <br />
 
 #### Dark mode
 
 <p align="center">
-<img width="600" src="https://user-images.githubusercontent.com/11304944/76160332-3ad6c900-6164-11ea-9c2b-d8e810d72bfc.png">
-
-<img width="600" src="https://user-images.githubusercontent.com/11304944/76160333-3ca08c80-6164-11ea-965c-9852ba147d6a.png">
+<img width="600" src="https://user-images.githubusercontent.com/11304944/79985099-b1dddc00-84dc-11ea-889f-c2c8c61ae6ed.png">
+</p>
+<p align="center">
+<img width="600" src="https://user-images.githubusercontent.com/11304944/79985096-b0141880-84dc-11ea-8d6f-ad52000670ea.png">
 </p>
 
 <br />
@@ -70,7 +77,18 @@ You can **switch languages** in the configuration file
 #### Mobile
 
 <p align="center">
-<img width="600" src="https://user-images.githubusercontent.com/11304944/76160334-3d392300-6164-11ea-93fb-0527e2eba68a.png">
+<img width="500" src="https://user-images.githubusercontent.com/11304944/79985319-ff5a4900-84dc-11ea-92b5-c152086449d2.png">
+</p>
+<p align="center">
+<img width="500" src="https://user-images.githubusercontent.com/11304944/79985361-139e4600-84dd-11ea-95a8-110894c90576.png">
+</p>
+
+<br />
+
+#### Social Experience
+
+<p align="center">
+<img width="450" src="https://user-images.githubusercontent.com/11304944/77065600-93d41600-6a1c-11ea-9916-562ec1132026.png">
 </p>
 
 <br />
@@ -79,45 +97,43 @@ You can **switch languages** in the configuration file
 
 **First, do not rename any directories！** You can start your writing in the `posts` folder.
 
-In the **root directory** of the project, you can change the configuration for your blog:
+In the **root directory** of the project, you can change the configuration for your blog。
 
-```js
-const BLOG = {
-  anthor: 'Witt',               // article anthor, used on `Meta`
-  title: 'Witt - unix.bio',     // website title
-  description: 'Witt\'s blog',  // used on `Meta`
-  summary: '',                  // one sentence introduction, show on home page
-  language: 'en-us',            // 'en-us' or 'zh-cn'
-  latestLimit: 5,               // number of home display lists
-  
-  labels: {                     // label text
-    default: 'default',
-    latest: 'latest',
-    list: 'all list',
-  },
-  
-  email: '',                    // about social
-  github: 'unix',
-  twitter: 'echo_witt',
-  domain: 'unix.bio',           // your domain name
-  
-  googleAnalytics: 'UA-x',
-  cn: true,                     // chinese translation of some characters
-}
-```
-
+All configuration documents please [refer to here](https://github.com/unix/unix.bio/wiki/All-configuration-items-for-Blog)
 
 <br />
 
 ### How to migrate
 
-1. click <kbd>Use this template</kbd> button on GitHub
-2. create new project
-3. copy folder `posts` & `fixed` to your new project
+Timely migration can help you get the latest source code, this includes bug fixes and new features.
+
+Fortunately, we have a easy to use migrate tool, just run:
+
+```shell
+npx unix-bio migrate
+```
+
+<br />
+
+### Deploy only static (Not recommended)
+
+In a few scenarios, you may want to deploy your blog on a CDN or other static server. Use the following commands to deploy:
+
+```bash
+npm run export
+```
+
+After running the command, the generated static file will be in the `/out` directory. If you want to set the prefix of the CDN,
+please set the environment variable:
+
+```bash
+# set CDN prefix
+export CDN_PREFIX=https://unix.bio
+npm run export
+```
 
 <br />
 
 ### LICENSE
 
 [MIT](./LICENSE)
-

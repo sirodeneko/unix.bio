@@ -1,39 +1,55 @@
-import React, { useMemo } from 'react'
-import dynamic from 'next/dynamic'
-import { Spacer, Text, useTheme } from '@zeit-ui/react'
+import React, { useEffect, useMemo, useState } from 'react'
+import Head from 'next/head'
 import Profile from './profile'
-import { msToString } from '../date-transform'
+import Contacts from './contacts'
+import Title from './title'
+import { Spacer } from '@zeit-ui/react'
+import { Configs } from '../utils'
 
-const ContactsWithNoSSR = dynamic(
-  () => import('./contacts'),
-  { ssr: false }
+const LayoutHeader = ({ meta }) => (
+  <Head>
+    {meta.title && (
+      <title>
+        {meta.title} - {Configs.title}
+      </title>
+    )}
+    {meta.description && <meta name="description" content={meta.description} />}
+    {meta.description && <meta property="og:description" content={meta.description} />}
+    {meta.title && <meta property="og:title" content={meta.title} />}
+    {meta.image && <meta property="og:image" content={meta.image} />}
+    {meta.image && <meta property="twitter:image" content={meta.image} />}
+  </Head>
 )
 
-const getDate = date => {
-  const d = new Date(date)
-  if (`${d}` === 'Invalid Date') return ''
-  const time = Date.now() - new Date(date).getTime()
-  return `${d.toLocaleString()} - ${msToString(time)}`
-}
-
-const Layout = ({ children, meta }) => {
-  const theme = useTheme()
+const Layout = ({ children, meta = {} }) => {
+  const [showAfterRender, setShowAfterRender] = useState(false)
   const inDetailPage = useMemo(() => meta && meta.title, [])
-  const date = useMemo(() => getDate((meta || {}).date), [])
-  
+  useEffect(() => setShowAfterRender(true), [])
+
+  if (!showAfterRender)
+    return (
+      <div className="article-content">
+        <LayoutHeader meta={meta} />
+        {children}
+        <style jsx>{`
+          .article-content {
+            opacity: 0;
+            display: none;
+          }
+        `}</style>
+      </div>
+    )
   return (
     <section>
+      <LayoutHeader meta={meta} />
       <div className="container">
-        {inDetailPage && <Spacer />}
+        <Spacer />
         <Profile />
-        {inDetailPage && <Spacer y={1} />}
-        {inDetailPage && <Text h1>{meta.title}</Text>}
-        {inDetailPage && <Text p className="date">{date}</Text>}
-        {inDetailPage && <Spacer y={1} />}
+        {inDetailPage && <Title title={meta.title} date={meta.date} />}
         {children}
-        <ContactsWithNoSSR />
+        <Spacer y={5} />
+        <Contacts isDetailPage={inDetailPage} />
       </div>
-      
 
       <style jsx>{`
         section {
@@ -43,50 +59,35 @@ const Layout = ({ children, meta }) => {
           align-items: center;
           justify-content: center;
         }
-        
+
         .container {
           width: 100%;
-          max-width: 750px;
+          max-width: ${Configs.layouts.pageWidth};
           display: flex;
           flex-direction: column;
           justify-content: flex-start;
-          text-spacing: none;
         }
-        
+
         .container :global(h1) {
           font-size: 2rem;
         }
-        
+
         .container :global(h2) {
           font-size: 1.7rem;
         }
-        
+
         .container :global(h3) {
           font-size: 1.4rem;
         }
-        
+
         .container :global(h4) {
           font-size: 1.2rem;
         }
-        
-        .container>:global(.date) {
-          color: ${theme.palette.accents_5};
-          font-size: .85rem;
-          margin: -.5rem 0 0 0;
-        }
-        
+
         @media only screen and (max-width: 767px) {
           .container {
-            max-width: 95vw;
+            max-width: ${Configs.layouts.pageWidthMobile};
             min-height: 100vh;
-          }
-          
-          .container :global(h1) {
-            text-align: center;
-          }
-          
-          .container>:global(.date) {
-            text-align: center;
           }
         }
       `}</style>

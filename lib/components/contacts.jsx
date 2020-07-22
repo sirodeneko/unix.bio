@@ -1,86 +1,121 @@
 import React, { useMemo } from 'react'
-import { useTheme, Spacer, Link } from '@zeit-ui/react'
-import BLOG from '../../blog.config'
-import useConfigs from '../states/config-context'
-import Github from './icons/github'
-import Twitter from './icons/twitter'
-import Mail from './icons/mail'
-import Sun from './icons/sun'
-import Moon from './icons/moon'
+import { useTheme, Spacer, Link, Divider } from '@zeit-ui/react'
+import useConfigs from '../config-context'
+import SunIcon from '@zeit-ui/react-icons/sun'
+import MoonIcon from '@zeit-ui/react-icons/moon'
+import { Configs } from '../utils'
 
-const Contacts = () => {
+const Contacts = ({ isDetailPage = false }) => {
   const theme = useTheme()
   const configs = useConfigs()
   const isDark = useMemo(() => theme.type === 'dark', [theme.type])
-  const email = useMemo(() => {
-    if (!BLOG.email) return null
-    return `mailto:${BLOG.email}`
-  }, [])
-  const github = useMemo(() => {
-    if (!BLOG.github) return null
-    return `https://github.com/${BLOG.github}`
-  }, [])
-  const twitter = useMemo(() => {
-    if (!BLOG.twitter) return null
-    return `https://twitter.com/${BLOG.twitter}`
-  }, [])
-  const switchTheme = () => {
-    const isDark = theme.type === 'dark'
-    configs.onChange(isDark)
+  const switchTheme = () => configs.onChange(theme.type === 'dark')
+
+  const themeTitle = Configs.isCN() ? '切换主题' : 'Switch themes'
+  const linkProps = {
+    rel: 'noreferrer',
+    target: '_blank',
   }
-  
+
   return (
     <>
-      <Spacer y={5.5} />
       <div className="contacts">
-        {isDark && <Sun onClick={switchTheme} />}
-        {!isDark && <Moon onClick={switchTheme} />}
-        {email && <Link aria-label="email" rel="noreferrer" pure target="_blank" href={email}><Mail /></Link> }
-        {github && <Link aria-label="github" rel="noreferrer" pure target="_blank" href={github}><Github /></Link>}
-        {twitter && <Link aria-label="twitter" rel="noreferrer" pure target="_blank" href={twitter}><Twitter /></Link>}
-        <div className="line">
-          <Spacer y={.5} />
+        {isDetailPage && <Divider y={0.5} />}
+        <div className="between">
+          <div className="socials">
+            {Configs.email && (
+              <Link aria-label="email" href={Configs.email} {...linkProps}>
+                Email
+              </Link>
+            )}
+            {Configs.github && (
+              <Link aria-label="github" href={Configs.github} {...linkProps}>
+                Github
+              </Link>
+            )}
+            {Configs.twitter && (
+              <Link aria-label="twitter" href={Configs.twitter} {...linkProps}>
+                Twitter
+              </Link>
+            )}
+          </div>
+          <div>
+            {isDark && (
+              <span title={themeTitle}>
+                <SunIcon onClick={switchTheme} size={16} />
+              </span>
+            )}
+            {!isDark && (
+              <span title={themeTitle}>
+                <MoonIcon onClick={switchTheme} size={16} />
+              </span>
+            )}
+          </div>
         </div>
-    
-        <style jsx>{`
-        .contacts {
-          width: fit-content;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          //position: relative;
-          padding: 0 ${theme.layout.gapQuarter};
-          position: absolute;
-          bottom: 2.5rem;
-        }
 
-        .contacts :global(svg) {
-          cursor: pointer;
-          margin: ${theme.layout.gapQuarter} ${theme.layout.gapHalf};
-          position: relative;
-          z-index: 2;
-        }
-        
-        .line {
-          background-color: ${theme.palette.accents_1};
-          position: absolute;
-          bottom: 4px;
-          top: 4px;
-          left: -8px;
-          width: 8px;
-          z-index: 1;
-        }
-        
-        @media only screen and (max-width: 767px) {
+        <style jsx>{`
           .contacts {
+            width: ${Configs.layouts.pageWidth};
+            padding: 0 ${theme.layout.gapQuarter};
             position: absolute;
-            bottom: 2.5rem;
-            left: 1rem;
+            z-index: 1;
+            bottom: 3.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: ${theme.palette.accents_6};
           }
-        }
-      `}</style>
+
+          .between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+
+          .contacts :global(svg) {
+            cursor: pointer;
+            margin: ${theme.layout.gapQuarter} ${theme.layout.gapHalf};
+            position: relative;
+            color: inherit;
+            z-index: 2;
+          }
+
+          .contacts :global(a) {
+            color: inherit;
+          }
+
+          .socials :global(a) {
+            margin-right: 0.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+          }
+
+          .contacts span {
+            color: inherit;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+          }
+
+          .contacts span:hover {
+            color: ${theme.palette.accents_4};
+          }
+
+          .contacts :global(a:hover) {
+            color: ${theme.palette.accents_4};
+            text-decoration: underline dashed;
+            cursor: ne-resize;
+            transition: all 150ms ease;
+          }
+
+          @media only screen and (max-width: ${theme.layout.breakpointMobile}) {
+            .contacts {
+              position: absolute;
+              width: ${Configs.layouts.pageWidthMobile};
+            }
+          }
+        `}</style>
       </div>
-      <Spacer y={2.5} />
+      <Spacer y={3.5} />
     </>
   )
 }
