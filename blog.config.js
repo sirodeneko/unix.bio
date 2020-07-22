@@ -3,8 +3,8 @@ const BLOG = {
   anthor: 'me',
   title: 'siroblog',
   description: 'Witt\'s blog',
-  summary: 'My new blog',
-  language: 'en-us',
+  summary: 'siro与neko',
+  language: 'zh-cn',//'en-us'或'zh-cn'
   latestLimit: 5,
   
   labels: {
@@ -16,7 +16,7 @@ const BLOG = {
   email: 'siro-neko@qq.com',
   github: 'sirodeneko',
   twitter: '',
-  domain: 'unix.bio',
+  domain: 'xiaosiro.cn',
   
   googleAnalytics: '',
   cn: true,
