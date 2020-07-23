@@ -8,7 +8,7 @@
 
 ### How to use
 
-This is the source code of my [blog](https://unix.bio).
+This is the source code of my [blog](https://bolg.xiaosiro.cn/).
 
 You can also use this project to build your own blog.
 
@@ -85,13 +85,7 @@ You can **switch languages** in the configuration file
 
 <br />
 
-#### Social Experience
 
-<p align="center">
-<img width="450" src="https://user-images.githubusercontent.com/11304944/77065600-93d41600-6a1c-11ea-9916-562ec1132026.png">
-</p>
-
-<br />
 
 ### Configuration
 

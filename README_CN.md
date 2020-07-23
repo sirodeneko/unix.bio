@@ -72,25 +72,6 @@
 
 <br />
 
-#### 移动设备
-
-<p align="center">
-<img width="500" src="https://user-images.githubusercontent.com/11304944/79985319-ff5a4900-84dc-11ea-92b5-c152086449d2.png">
-</p>
-<p align="center">
-<img width="500" src="https://user-images.githubusercontent.com/11304944/79985361-139e4600-84dd-11ea-95a8-110894c90576.png">
-</p>
-
-<br />
-
-#### 社交体验
-
-<p align="center">
-<img width="450" src="https://user-images.githubusercontent.com/11304944/77065600-93d41600-6a1c-11ea-9916-562ec1132026.png">
-</p>
-
-<br />
-
 ### 配置
 
 **首先，请不要重命名任何文件夹！** 你可以在 `posts` 文件夹下开始写作。
