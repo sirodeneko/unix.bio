@@ -1,0 +1,293 @@
+import Layout from 'lib/components/layout'
+import {} from '@zeit-ui/react'
+
+export const meta = {
+  title: '网易云API Golang版开发历程',
+  date: '2020-07-29T00:18:15.732Z',
+  description: 'NeteaseCloudMusicApiWithGo 网易云API Golang版开发历程',
+  image: '',
+}
+
+## 网易云API Golang版开发历程
+
+> 原项目（node.js) [网易云音乐 API](https://github.com/Binaryify/NeteaseCloudMusicApi)
+>
+> 本项目  (golang) [网易云音乐 API](https://github.com/sirodeneko/NeteaseCloudMusicApiWithGo)
+>
+> [api文档](https://binaryify.github.io/NeteaseCloudMusicApi)
+
+### 想法的开始
+
+事情的开始还是一开始在B站上看到了一个仿网易云网页版的VUE项目，当时挺喜欢的就fork了一下，打算继续完善这个项目就当Vue项目练手了，当时以为整个项目是有后端的，后来仔细一看发现是用了[网易云音乐 API](https://github.com/Binaryify/NeteaseCloudMusicApi)这个node项目伪造请求向网易云请求数据。后来稍微看了一下这个项目，虽然我不会用node但是好歹我也是会百度的，大概还是看出了核心代码（如何伪造请求）在哪里，感觉应该也不是太难，就打算巩固一下golang就想用golang实现一下。
+
+### 解析原项目
+
+说来丢人，看不懂node是如何接受请求的，没看到在哪定义了路由，十分疑惑（虽然并不影响我）。首先项目基本逻辑:
+
+ - 接受客户端请求
+ - 预处理:放行请求，允许跨域,拿出cookie（app.js)
+ - 构造伪请求，封装必要数据(module,util/request.js)
+ - 将数据进行加密，构造特定的请求参数(util/crypto.js)
+ - 向网易云发送请求(util/request.js)
+ - 解析返回数据，将数据返回给客户端，对于登录请求，还要写入cookie
+
+整体的流程还是很好理解的，整个项目的重点在于`util/request.js`，`util/crypto.js` 这两个包，一个负责发请求，一个负责加密。
+
+### 构建golang项目 
+
+项目采用gin来处理路由，以[singo](https://github.com/sirodeneko/singo-1)为脚手架快速搭建web应用程序,采用[asmcos/requests](https://github.com/asmcos/requests) 发送请求。
+
+重点代码
+
+#### 1.请求数据封装传递
+
+```go
+// 邮箱登录接口为例
+// 将客户端发送的请求绑定到结构体中
+type LoginEmailService struct {
+	Email       string `json:"email" form:"email"`
+	Password    string `json:"password" form:"password"`
+	Md5password string `json:"md5_password" form:"md5_password"`
+}
+
+func (service *LoginEmailService) LoginEmail(c *gin.Context) map[string]interface{} {
+
+	// 获得客户端请求的所有cookie
+	cookies := c.Request.Cookies()
+    // 因为这个请求需要这个cookie 故添加一个
+	cookiesOS := &http.Cookie{Name: "os", Value: "pc"}
+	cookies = append(cookies, cookiesOS)
+
+    // 构建请求参数，util.Options为请求选项的封装，对应原项目的 options
+	options := &util.Options{
+		Crypto:  "weapi",
+		Ua:      "pc",
+		Cookies: cookies,
+	}
+    // data为请求的body的所需原数据
+	data := make(map[string]string)
+	data["username"] = service.Email
+	if service.Password != "" {
+        // 密码进行MD5
+		h := md5.New()
+		h.Write([]byte(service.Password))
+		data["password"] = hex.EncodeToString(h.Sum(nil))
+	} else {
+		data["password"] = service.Md5password
+	}
+	data["rememberLogin"] = "true"
+
+	// 将数据发往request 包括 请求方法，连接，数据，请求选项 返回网易云的数据返回和set-cookie
+	reBody, cookies := util.CreateRequest("POST", `https://music.163.com/weapi/login`, data, options)
+
+	cookiesStr := ""
+	
+    
+	for _, cookie := range cookies {
+		if cookiesStr != "" {
+			cookiesStr = cookiesStr + ";"
+		}
+		cookiesStr = cookiesStr + cookie.String()
+        // 写入cookie
+		c.SetCookie(cookie.Name, cookie.Value, 60*60*24, "", cookie.Domain, false, false)
+	}
+
+	reBody["cookie"] = cookiesStr
+
+	return reBody
+}
+```
+
+
+
+#### 2.请求函数（大体与原项目逻辑一致）
+
+```go
+// 定义的请求选项的结构体
+type Options struct {
+	Crypto  string
+	Ua      string
+	Cookies []*http.Cookie
+	Token   string
+	Url     string
+}
+
+// 创建请求
+func CreateRequest(method string, url string, data map[string]string, options *Options) (map[string]interface{}, []*http.Cookie) {
+    // 初始化一个请求对象（详细用法请见 github.com/asmcos/requests）
+	req := requests.Requests()
+    // 设置请求头
+	req.Header.Set("User-Agent", chooseUserAgent(options.Ua))
+	csrfToken := ""
+	music_U := ""
+    // 定义返回对象
+	answer := map[string]interface{}{}
+
+	if method == "POST" {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+	if strings.Contains(url, "music.163.com") {
+		req.Header.Set("Referer", "https://music.163.com")
+	}
+	if options.Cookies != nil {
+		for _, cookie := range options.Cookies {
+            // 将cookie写入请求体中 并且获取部分cookie的值(后面会有所使用)
+			req.SetCookie(cookie)
+			if cookie.Name == "__csrf" {
+				csrfToken = cookie.Value
+			}
+			if cookie.Name == "MUSIC_U" {
+				music_U = cookie.Value
+			}
+		}
+	}
+    // 根据不同的请求类型进入不同的加密函数
+	if options.Crypto == "weapi" {
+		data["csrf_token"] = csrfToken
+        // 执行加密  下同Linuxapi(linuxApiData)，Eapi(options.Url, eapiData)
+		data = Weapi(data)
+        // 正则替换请求url(其实没什么必要，因为url是自己传递的，不过原作者这样写了我也写一下吧)
+		reg, _ := regexp.Compile(`/\w*api/`)
+		url = reg.ReplaceAllString(url, "/weapi/")
+	} else if options.Crypto == "linuxapi" {
+		linuxApiData := make(map[string]interface{}, 3)
+		linuxApiData["method"] = method
+		reg, _ := regexp.Compile(`/\w*api/`)
+		linuxApiData["url"] = reg.ReplaceAllString(url, "/api/")
+		linuxApiData["params"] = data
+		data = Linuxapi(linuxApiData)
+		req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36")
+		url = "https://music.163.com/api/linux/forward"
+	} else if options.Crypto == "eapi" {
+		eapiData := make(map[string]interface{})
+         // 将data的数据写入eapiData
+		for key, value := range data {
+			eapiData[key] = value
+		}
+         // 随机种子
+		rand.Seed(time.Now().UnixNano())
+		header := map[string]string{
+			"osver":       "",
+			"deviceId":    "",
+			"mobilename":  "",
+			"appver":      "6.1.1",
+			"versioncode": "140",
+			"buildver":    strconv.FormatInt(time.Now().Unix(), 10),
+			"resolution":  "1920x1080",
+			"os":          "android",
+			"channel":     "",
+			"requestId":   strconv.FormatInt(time.Now().Unix()*1000, 10) + strconv.Itoa(rand.Intn(1000)),
+			"MUSIC_U":     music_U,
+		}
+
+		for key, value := range header {
+             // 将header里的数据写入cookie
+			req.SetCookie(&http.Cookie{Name: key, Value: value, Path: "/"})
+		}
+         // 将header写入eapiData
+		eapiData["header"] = header
+		data = Eapi(options.Url, eapiData)
+		reg, _ := regexp.Compile(`/\w*api/`)
+		url = reg.ReplaceAllString(url, "/eapi/")
+	}
+	var resp *requests.Response
+	var err error
+	if method == "POST" {
+		var form requests.Datas = data
+		resp, err = req.Post(url, form)
+	} else {
+		resp, err = req.Get(url)
+	}
+	
+    // 如果请求发生错误 写入错误即相应响应码
+	if err != nil {
+		answer["code"] = 520
+		answer["err"] = err.Error()
+		return answer, nil
+	}
+    // 获取返回的cookie
+	cookies := resp.Cookies()
+
+    // 读取返回的body
+	body := resp.Content()
+    // 对数据进行尝试zlib解压
+	b := bytes.NewReader(body)
+	var out bytes.Buffer
+	r, err := zlib.NewReader(b)
+	// 如果err为空，证明解压正常，覆盖body里的值
+	if err == nil {
+		io.Copy(&out, r)
+		body = out.Bytes()
+	}
+
+    // 将json字符串转化为对象写入answer
+	err = json.Unmarshal(body, &answer)
+	// 出错说明不是json
+	if err != nil {
+		// 可能是纯页面
+		if strings.Index(string(body), "<!DOCTYPE html>") != -1 {
+			answer["code"] = 200
+			answer["html"] = string(body)
+			return answer, cookies
+		}
+        // 如果不是纯页面未知数据，则返回错误
+		answer["code"] = 500
+		answer["err"] = err.Error()
+		return answer, nil
+	}
+    // 查询answer 有无code字段，无这写入200(避免返回值中无code字段)
+	if _, ok := answer["code"]; !ok {
+		answer["code"] = 200
+	}
+	return answer, cookies
+}
+
+```
+
+
+
+#### 3.加密函数
+
+```go
+// 代码没啥好解释的 按照原项目的代码的逻辑进行加密，变换编码，返回map[string]string（好奇原作者是如何知道加密规则的，这也太复杂了,加密函数调试了半天)
+func Weapi(data map[string]string) map[string]string {
+	text, _ := json.Marshal(data)
+	secretKey, reSecretKey := NewLen16Rand()
+	weapiType := make(map[string]string, 2)
+	weapiType["params"] = base64.StdEncoding.EncodeToString(aesEncrypt([]byte(base64.StdEncoding.EncodeToString(aesEncrypt(text, "cbc", presetKey, iv))), "cbc", reSecretKey, iv))
+	weapiType["encSecKey"] = hex.EncodeToString(rsaEncrypt(secretKey, publicKey))
+	return weapiType
+}
+
+func Linuxapi(data map[string]interface{}) map[string]string {
+	text, _ := json.Marshal(data)
+	linuxapiType := make(map[string]string, 1)
+	linuxapiType["params"] = strings.ToUpper(hex.EncodeToString(aesEncrypt(text, "ecb", linuxapiKey, nil)))
+	return linuxapiType
+}
+
+func Eapi(url string, data map[string]interface{}) map[string]string {
+	textByte, _ := json.Marshal(data)
+	fmt.Println(string(textByte))
+	message := "nobody" + url + "use" + string(textByte) + "md5forencrypt"
+	h := md5.New()
+	h.Write([]byte(message))
+	digest := hex.EncodeToString(h.Sum(nil))
+	dd := url + "-36cd479b6b5-" + string(textByte) + "-36cd479b6b5-" + digest
+	eapiType := make(map[string]string, 1)
+	eapiType["params"] = strings.ToUpper(hex.EncodeToString(aesEncrypt([]byte(dd), "ecb", eapiKey, nil)))
+	return eapiType
+}
+```
+
+### 收获
+
+站在巨人的肩膀上，看得更高更远。
+
+重构的一个很大的难点是原项目是node.js，是动态语言，go是静态语言，所以在定义一些用了传递数据的结构的是后要考虑周全的去设计，interface{}虽然可以接受任意类型，但是类型断言也很麻烦，能不用最好不要使用。在编写中，稍微接触了一些加密算法，还有go的各种编码的变换，收获了一些东西。还有json字符串与对象的巧妙换，假如要往json字符串中添加数据，可以将json序列化到`map[string]interface{}`中，interface{}可以接受任意结构，再将值写入map中，再序列化成json字符串。
+
+### 最后
+
+项目还在开发中（160多个api.....),核心已经完成了，剩下的慢慢来吧，开个坑，下一个项目玩玩**区块链**。
+
+export default ({ children }) => <Layout meta={meta}>{children}</Layout>
