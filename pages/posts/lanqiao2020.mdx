@@ -1,0 +1,149 @@
+import Layout from 'lib/components/layout'
+import {} from '@geist-ui/react'
+
+export const meta = {
+  title: '2020年蓝桥杯决赛后心得',
+  date: '2020-11-14T09:23:09.558Z',
+  description: '2020年蓝桥杯决赛后心得，少壮不努力，老大借吉言。最长上升子序列',
+  image: '',
+}
+
+### 2020年蓝桥杯决赛后心得
+
+​	久违地更新一下博客😂，今天跑去参加蓝桥杯决赛，发现自己还是太菜了，也就第一道签到题写得舒服点，后面的题都不太会写。虽然对题目的难度有些心理准备，但是。。。🤣 最令人生气的是，今天的动态规划没有写出来，亏我昨天还认真学习了一下`背包问题`啥的。今天居然出了两道`最长上升子序列`,自己太菜了想不出任何解决方法，虽然感觉是动态规划，但是想不出转移方程，最后只能把暴力的代码交上去了。因此，在此学习一下`最长上升子序列`的解题方法。
+
+#### 最长上升子序列
+
+给定一个无序的整数数组，找到其中最长上升子序列`的长度`。
+
+示例：
+
+```
+输入：[10,9,2,5,3,7,101,18]
+输出：4 (最长子序列[2,3,7,101]) 
+```
+
+##### 方法一（动态规划n^2)
+
+首先定义`dp[i]`:前`i`个元素以第`i`个数字结尾的最长序列的长度
+
+我们从小到大计算`dp[]`数组的值，转移方程 ``` dp[i]=max(dp[j])+1```,其中`max(dp[j])`意为从`dp[0]--dp[i-1]`中最大的数字.
+
+![图解](/assets/lanqian2020-1.png)
+
+```
+class Solution {
+  public:
+    int lengthOfLIS(vector<int> &nums) {
+    	// 去除特殊情况
+        if (nums.size() == 0)
+            return 0;
+        // 初始化dp数组，假设每个都只能自己构成最长子序列
+        vector<int> dp(nums.size(), 1);
+        // 最长子序列的长度
+        int maxLIS = 1;
+        for (int i = 1; i < nums.size(); i++) {
+        	// 每次遍历i之前的数据
+            for (int j = 0; j < i; j++) {
+            	// 假如说nums[i]>nums[j]且dp[i]<dp[j]+1 证明nums[i]可与num[j]之前的数构成更长的序列
+                if (nums[i] > nums[j] && dp[i] < dp[j] + 1)
+                    dp[i] = dp[j] + 1;
+                // 更新最大长度
+                maxLIS = max(dp[i], maxLIS);
+            }
+        }
+        return maxLIS;
+    }
+};
+```
+
+##### 方法二 （栈与二分 nlongn)
+
+1. `nums[i]`大于栈中最后一个元素，就push到栈中
+
+2. `nums[i]`小于栈中最后一个元素，就遍历栈，用`nums[i]`替换第一个大于他的栈元素，这一步可以使用二分查找优化到`nlongn` .
+
+   因为只有当新加入的数据大于最后一个才能增加长度，故可以保证最后的答案是正确的
+
+   **PS:最后的数组并不一定是正确的递增序列**
+
+   ```
+   class Solution {
+     public:
+     	// 二分算法
+       int binary_search(int num, vector<int> &st) {
+           int low = 0, high = st.size() - 1, mid;
+           while (low <= high) {
+               mid = low + (high - low) / 2;
+               if (st[mid] == num)
+                   return mid;
+               else if (st[mid] > num)
+                   high = mid - 1;
+               else if (st[mid] < num)
+                   low = mid + 1;
+           }
+           return low;
+       }
+       int lengthOfLIS(vector<int> &nums) {
+           vector<int> st;
+           if (nums.size() == 0)
+               return 0;
+           st.push_back(nums[0]);
+           for (int i = 1; i < nums.size(); i++) {
+           	// 大于最后一个则入栈
+               if (nums[i] > st.back())
+                   st.push_back(nums[i]);
+               else {
+               	// 替换掉第一个大于它的元素
+                   int pos = binary_search(nums[i], st);
+                   st[pos] = nums[i];
+               }
+           }
+           return st.size();
+       }
+   };
+   ```
+
+   #### [(leetcode)300. 最长上升子序列](https://leetcode-cn.com/problems/longest-increasing-subsequence/)
+
+#### 最长上升子序列（需返回序列，基于方法一——动态规划）
+
+```
+void DPandoutput(){
+	int posdp,pos=1;
+	for(int i=1;i<=n;i++){
+		dp[i]=1;
+		for(int j=1;j<i;j++){
+			if(a[i]>a[j]){
+				dp[i]=max(dp[j]+1,dp[i]);
+				if(dp[i]>=maxz)
+					//记录最后一个且最靠后的最长上升子序列的位置（加个等于就是使最后一个数尽可能的小） 
+					pos=i;
+				maxz=max(maxz,dp[i]);
+			}
+		}
+	}
+	// 打印长度
+	printf("%d\n",maxz);
+	posdp=maxz;
+	s[1]=a[pos];
+	int count=1;
+	// 从后向前遍历
+	for(int i=pos-1;i>=1;i--){
+		if(dp[i]==posdp-1){
+			s[++count]=a[i];//记录下每次最长上升子序列长度变化的位置i，然后
+			posdp=dp[i];// 其实就是posdp--
+		}
+	}
+	for(int i=count;i>=1;i--)
+		printf("%d ",s[i]);//输出即可
+	printf("\n");
+	return;
+}
+```
+
+
+
+总结完毕，撒花🙌
+
+export default ({ children }) => <Layout meta={meta}>{children}</Layout>
