@@ -1,0 +1,313 @@
+import Layout from 'lib/components/layout'
+import {} from '@geist-ui/react'
+
+export const meta = {
+  title: '2017年天梯赛大区赛L2题解',
+  date: '2021-02-22T13:50:05.149Z',
+  description: '2017年天梯赛大区赛L2题解',
+  image: '',
+}
+
+### 7-9 人以群分 (25 分)
+
+社交网络中我们给每个人定义了一个“活跃度”，现希望根据这个指标把人群分为两大类，即外向型（outgoing，即活跃度高的）和内向型（introverted，即活跃度低的）。要求两类人群的规模尽可能接近，而他们的总活跃度差距尽可能拉开。
+
+### 输入格式：
+
+输入第一行给出一个正整数*N*（2≤*N*≤105）。随后一行给出*N*个正整数，分别是每个人的活跃度，其间以空格分隔。题目保证这些数字以及它们的和都不会超过231。
+
+### 输出格式：
+
+按下列格式输出：
+
+```
+Outgoing #: N1
+Introverted #: N2
+Diff = N3
+```
+
+其中`N1`是外向型人的个数；`N2`是内向型人的个数；`N3`是两群人总活跃度之差的绝对值。
+
+### 输入样例1：
+
+```
+10
+23 8 10 99 46 2333 46 1 666 555
+```
+
+### 输出样例1：
+
+```
+Outgoing #: 5
+Introverted #: 5
+Diff = 3611
+```
+
+### 输入样例2：
+
+```
+13
+110 79 218 69 3721 100 29 135 2 6 13 5188 85
+```
+
+### 输出样例2：
+
+```
+Outgoing #: 7
+Introverted #: 6
+Diff = 9359
+```
+
+排序，分为两组输出答案
+
+```
+#include<iostream>
+#include<algorithm>
+#include<string>
+#include<set>
+#include<vector>
+using namespace std;
+int main(){
+	int n;
+	int num;
+	vector<int> vv;
+	cin>>n;
+	for(int i=0;i<n;i++){
+		cin>>num;
+		vv.push_back(num);
+	}
+	sort(vv.begin(),vv.end());
+	int max=0,min=0;
+	int i=0;
+	for(;i<n/2;i++){
+		min+=vv[i];
+	}
+	for(;i<n;i++){
+		max+=vv[i];
+	}
+	printf("Outgoing #: %d\nIntroverted #: %d\nDiff = %d",n-n/2,n/2,max-min);
+    return 0;
+}
+```
+
+
+
+### 7-10 多项式A除以B (25 分)
+
+这仍然是一道关于A/B的题，只不过A和B都换成了多项式。你需要计算两个多项式相除的商Q和余R，其中R的阶数必须小于B的阶数。
+
+### 输入格式：
+
+输入分两行，每行给出一个非零多项式，先给出A，再给出B。每行的格式如下：
+
+```
+N e[1] c[1] ... e[N] c[N]
+```
+
+其中`N`是该多项式非零项的个数，`e[i]`是第`i`个非零项的指数，`c[i]`是第`i`个非零项的系数。各项按照指数递减的顺序给出，保证所有指数是各不相同的非负整数，所有系数是非零整数，所有整数在整型范围内。
+
+### 输出格式：
+
+分两行先后输出商和余，输出格式与输入格式相同，输出的系数保留小数点后1位。同行数字间以1个空格分隔，行首尾不得有多余空格。注意：零多项式是一个特殊多项式，对应输出为`0 0 0.0`。但非零多项式不能输出零系数（包括舍入后为0.0）的项。在样例中，余多项式其实有常数项`-1/27`，但因其舍入后为0.0，故不输出。
+
+### 输入样例：
+
+```
+4 4 1 2 -3 1 -1 0 -1
+3 2 3 1 -2 0 1
+```
+
+### 输出样例：
+
+```
+3 2 0.3 1 0.2 0 -1.0
+1 1 -3.1
+```
+
+[多项式除法详解](https://wenku.baidu.com/view/73bcdf7210661ed9ad51f3d2.html?from=search)
+
+模拟多项式除法。
+
+```
+#include<iostream>
+#include<algorithm>
+#include<string>
+#include<set>
+#include<vector>
+#include<cmath>
+
+using namespace std;
+double eps=0.05;
+const int N=100000;
+double e1[N]={0},e2[N]={0},e3[N]={0};// e1保存被除数，e2保存除数，e3保存结果，下标为指数，值为系数
+int main(){
+    int n,ma1=0,ma2=0;//ma1，ma2保存最高指数
+    scanf("%d",&n);
+    for(int i=0;i<n;i++){
+        int x;
+        double y;
+        scanf("%d%lf",&x,&y);
+        e1[x]+=y;
+        if(x>ma1){
+            ma1=x;
+        }
+    }
+    int m;
+    scanf("%d",&m);
+    for(int i=0;i<m;i++){
+        double y;
+        int x;
+        scanf("%d%lf",&x,&y);
+        e2[x]+=y;
+        if(x>ma2)ma2=x;
+    }
+    if(ma2>ma1){
+        printf("0 0 0.0\n");
+        printf("%d",n);
+        for(int i=ma1;i>=0;i--){
+            if(fabs(e1[i])>=eps){//过滤掉过小的项
+                printf(" %d %.1lf",i,e1[i]);
+            }
+        }
+        printf("\n");
+    }
+    else {
+        int tp=ma1;
+        while(ma1>=ma2){
+        	//每次循环即执行一遍链接中的前三步
+            double y=e1[ma1]/e2[ma2];
+            e3[ma1-ma2]+=y;
+            for(int i=ma2;i>=0;i--){
+                if(fabs(e2[i])>=eps)e1[i+ma1-ma2]-=y*e2[i];
+            }// 进行了一层除法，并且修改了e1
+            int tt=0,ii;
+            for(ii=tp;ii>=0;ii--){
+                if(fabs(e1[ii])>=eps){
+                    if(ii>tt)tt=ii;break;
+                }
+            }
+            if(ii<0)break;
+            //tt为进行一次减法后所新得到的多项式的最高项的系数
+            ma1=tt;
+        }
+        int f1=0,f2=0;
+        for(int i=tp;i>=0;i--)if(fabs(e3[i])>=eps)f1++;//记录合适项的个数
+        for(int i=tp;i>=0;i--)if(fabs(e1[i])>=eps)f2++;
+        if(f1==0){// 如果e3无合适的项就输出0
+            printf("0 0 0.0\n");
+        }
+        else {
+            printf("%d",f1);
+            for(int i=tp;i>=0;i--){
+                if(fabs(e3[i])>=eps){
+                    printf(" %d %.1lf",i,e3[i]);
+                }
+            }
+            printf("\n");
+        }
+        if(f2==0){// 如果e1无合适的项就输出0
+            printf("0 0 0.0\n");
+        }
+        else {//因为e1保存每次运算后的结果，所以最后e1就是余数
+            printf("%d",f2);
+            for(int i=tp;i>=0;i--){
+                if(fabs(e1[i])>=eps){
+                    printf(" %d %.1lf",i,e1[i]);
+                }
+            }
+        }
+    }
+    return 0;
+}
+```
+
+
+
+### 7-12 功夫传人 (25 分)
+
+一门武功能否传承久远并被发扬光大，是要看缘分的。一般来说，师傅传授给徒弟的武功总要打个折扣，于是越往后传，弟子们的功夫就越弱…… 直到某一支的某一代突然出现一个天分特别高的弟子（或者是吃到了灵丹、挖到了特别的秘笈），会将功夫的威力一下子放大N倍 —— 我们称这种弟子为“得道者”。
+
+这里我们来考察某一位祖师爷门下的徒子徒孙家谱：假设家谱中的每个人只有1位师傅（除了祖师爷没有师傅）；每位师傅可以带很多徒弟；并且假设辈分严格有序，即祖师爷这门武功的每个第`i`代传人只能在第`i-1`代传人中拜1个师傅。我们假设已知祖师爷的功力值为`Z`，每向下传承一代，就会减弱`r%`，除非某一代弟子得道。现给出师门谱系关系，要求你算出所有得道者的功力总值。
+
+### 输入格式：
+
+输入在第一行给出3个正整数，分别是：*N*（≤105）——整个师门的总人数（于是每个人从0到*N*−1编号，祖师爷的编号为0）；*Z*——祖师爷的功力值（不一定是整数，但起码是正数）；*r* ——每传一代功夫所打的折扣百分比值（不超过100的正数）。接下来有*N*行，第*i*行（*i*=0,⋯,*N*−1）描述编号为*i*的人所传的徒弟，格式为：
+
+*K**i* ID[1] ID[2] ⋯ ID[*K**i*]
+
+其中*K**i*是徒弟的个数，后面跟的是各位徒弟的编号，数字间以空格间隔。*K**i*为零表示这是一位得道者，这时后面跟的一个数字表示其武功被放大的倍数。
+
+### 输出格式：
+
+在一行中输出所有得道者的功力总值，只保留其整数部分。题目保证输入和正确的输出都不超过1010。
+
+### 输入样例：
+
+```
+10 18.0 1.00
+3 2 3 5
+1 9
+1 4
+1 7
+0 7
+2 6 1
+1 8
+0 9
+0 4
+0 3
+```
+
+### 输出样例：
+
+```
+404
+```
+
+深搜
+
+```
+#include<iostream>
+#include<algorithm>
+#include<string>
+#include<set>
+#include<vector>
+#include<cmath>
+#include<cstring>
+using namespace std;
+const int maxm = 100005;
+vector<int> child[maxm];
+double val[maxm],z,r,sum;
+void dfs(int id,double w){
+    if(val[id]){
+        sum = sum+w*val[id];
+    }
+    for(int i=0;i<child[id].size();i++){
+        dfs(child[id][i],w*r);
+    }
+}
+int main(){
+    int n,m,k;
+    memset(val,0,sizeof(val));
+    sum = 0;
+    scanf("%d %lf %lf",&n,&z,&r);
+    r = (100-r)/100;
+    for(int i=0;i<n;i++){
+        scanf("%d",&m);
+        if(!m){
+            scanf("%lf",&val[i]);
+        }else{
+            for(int j=0;j<m;j++){
+                scanf("%d",&k);
+                child[i].push_back(k);
+            }
+        }
+    }
+    dfs(0,z);
+    printf("%d\n",(int)sum);
+    return 0;
+}
+```
+
+
+
+export default ({ children }) => <Layout meta={meta}>{children}</Layout>
