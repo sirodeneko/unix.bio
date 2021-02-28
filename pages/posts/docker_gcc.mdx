@@ -1,0 +1,56 @@
+import Layout from 'lib/components/layout'
+import {} from '@geist-ui/react'
+
+export const meta = {
+  title: 'exec user process caused no such file or directory',
+  date: '2021-02-28T07:01:32.793Z',
+  description: 'exec user process caused no such file or directory ,golang 镜像运行失败',
+  image: '',
+}
+
+随着容器化的兴起，大家在习惯性的会在后端完成后构建一个docker镜像，便于服务的发布与运行。此时，镜像文件的大小就成了大家关注的一个很重要的点。过大的镜像不便于项目的发布，更会大大的占用服务器的存储空间。因此，如果我们想构建一个golang镜像，通常会采用多层构建的方式。在golang镜像中编译golang代码，在精简的容器中运行代码，因为只包括运行的程序，故镜像的大小会大大减少。
+
+例如：
+
+```
+FROM golang as build
+
+ENV GOPROXY=https://goproxy.io
+
+ADD . /goapp
+
+WORKDIR /goapp
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api_server
+
+FROM alpine:3.7
+
+RUN echo "http://mirrors.aliyun.com/alpine/v3.7/main/" > /etc/apk/repositories && \
+    apk update && \
+    apk add ca-certificates && \
+    echo "hosts: files dns" > /etc/nsswitch.conf && \
+
+WORKDIR /www
+
+COPY --from=build /gomailme/api_server /usr/bin/api_server
+
+RUN chmod +x /usr/bin/api_server
+
+ENTRYPOINT ["api_server"]
+```
+
+alpine镜像为一个最精简的linux镜像，仅包含系统运行的最基本的内容，因此，其大小仅有几M，但是有的时候镜像并不能成功运行
+
+ **`standard_init_linux.go211 exec user process caused no such file or directory`**
+
+这是`cgo`的一个大坑,当我们的程序使用了cgo,并运行在alpine镜像中，我们的镜像就不能正常运行了。这是因为在alpine镜像中不含有其动态链接的C库函数。
+
+我们有三种解决方法：
+
+1. CGO_ENABLED=0,禁用cgo,程序采用纯go实现，这样也就不用管系统是否含有C库函数了。
+2. 但是如果我们的程序必须要使用cgo,CGO_ENABLED=1是必须的，这个时候我们就要考虑更换一个镜像去运行，例如 **`busybox:glibc`** 
+3. 如果要使用cgo可以通过`go build --ldflags "-extldflags -static"` 来让gcc使用静态编译。
+
+
+
+export default ({ children }) => <Layout meta={meta}>{children}</Layout>
