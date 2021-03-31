@@ -1,6 +1,6 @@
 const BLOG = {
   author: 'Siro',
-  title: 'Siro\'bolg',
+  title: 'Siro\'blog',
   description:
     "Hi,I'm Siro, A body who wants to change his destiny with code",
   summary: '代码改变命运',
