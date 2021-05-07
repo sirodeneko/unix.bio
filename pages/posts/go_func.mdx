@@ -7,6 +7,7 @@ export const meta = {
   description: 'Go中Struct的指针方法和非指针方法有什么区别呢?',
   image: '',
 }
+
 ## Go中Struct的指针方法和非指针方法
 
 在go中，我们可以为结构体绑定方法，使某个方法属于某个函数，但是却有两种不一样的方法
@@ -155,7 +156,6 @@ func main(){
 代码很简单，一个并发安全的map,看起来没有任何问题,但是当运行代码时，非常可能将会报错`fatal error: all goroutines are asleep - deadlock!` 发生了死锁，为什么呢？不是最后都`Unlock()` 了吗？其实可以注意到`func (myMap MyMap) Get(i int)` ，这是非指针引用，而`sync.Mutex`也不是指针对象，因此当调用Get()的时候将会复制一份新的结构体，因此这个锁就已经不是原来的锁了，也就是说加锁失败了。但是这其实也不是发生死锁的原因（笑），这会导致另一个错误`fatal error: concurrent map read and map write` ,对一个map同时读写。出现死锁的原因是，**当进行值拷贝的时候，同时也会拷贝锁的状态！！！**，也就是说我们可能拷贝了一份上锁了的锁过来，然后我们又在等待锁的释放，但是并没有人可以对其进行释放，因此就进入了死锁状态。
 
 所以请在编写代码是时候习惯性的采用指针方法，一来提高性能（不用进行数据的拷贝），二来避免出现奇奇怪怪的BUG。
-
 
 
 export default ({ children }) => <Layout meta={meta}>{children}</Layout>
